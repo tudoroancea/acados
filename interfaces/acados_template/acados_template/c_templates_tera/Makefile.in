@@ -19,7 +19,7 @@
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, EXTRAS, EXEMPLARY, OR
 # CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
 # SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
 # INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
@@ -312,12 +312,12 @@ CPPFLAGS+= -I $(INCLUDE_PATH)/daqp/include
 
 {# c-compiler flags #}
 # define the c-compiler flags for make's implicit rules
-CFLAGS = -fPIC -std=c99 {{ openmp_flag }} {{ solver_options.ext_fun_compile_flags }}#-fno-diagnostics-show-line-numbers -g
+CFLAGS = -fPIC -std=c99 {{ openmp_flag }} {{ solver_options.ext_fun_compile_flags }} $(shell python3-config --cflags) #-fno-diagnostics-show-line-numbers -g 
 # # Debugging
 # CFLAGS += -g3
 
 # linker flags
-LDFLAGS+= -L$(LIB_PATH)
+LDFLAGS+= -L$(LIB_PATH) $(shell python3-config --ldflags)
 
 # link to libraries
 LDLIBS+= -lacados
@@ -325,11 +325,15 @@ LDLIBS+= -lhpipm
 LDLIBS+= -lblasfeo
 LDLIBS+= -lm
 LDLIBS+= {{ link_libs }}
+LDLIBS+= $(shell python3-config --libs)
 
 # libraries
 LIBACADOS_SOLVER=libacados_solver_{{ model.name }}{{ shared_lib_ext }}
 LIBACADOS_OCP_SOLVER=libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }}
 LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c={{ shared_lib_ext }})
+
+# additional python includes and link_libs
+EXTRAS:=$(shell python3-config --cflags --ldflags)
 
 # virtual targets
 .PHONY : all clean
@@ -386,7 +390,7 @@ ocp_cython_o: ocp_cython_c
 ocp_cython: ocp_cython_o
 	$(CC) $(ACADOS_FLAGS) -shared \
 	-o acados_ocp_solver_pyx{{ shared_lib_ext }} \
-	-Wl,-rpath=$(LIB_PATH) \
+	-Wl,-rpath,$(LIB_PATH) \
 	acados_ocp_solver_pyx.o \
 	$(abspath .)/libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }} \
 	$(LDFLAGS) $(LDLIBS)
@@ -406,6 +410,7 @@ sim_cython_o: sim_cython_c
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
+	$(EXTRAS) \
 	{%- for path in cython_include_dirs %}
 	-I {{ path }} \
 	{%- endfor %}
@@ -414,7 +419,8 @@ sim_cython_o: sim_cython_c
 sim_cython: sim_cython_o
 	$(CC) $(ACADOS_FLAGS) -shared \
 	-o acados_sim_solver_pyx{{ shared_lib_ext }} \
-	-Wl,-rpath=$(LIB_PATH) \
+	-Wl,-rpath,$(LIB_PATH) \
+	$(EXTRAS) \
 	acados_sim_solver_pyx.o \
 	$(abspath .)/libacados_sim_solver_{{ model.name }}{{ shared_lib_ext }} \
 	$(LDFLAGS) $(LDLIBS)
