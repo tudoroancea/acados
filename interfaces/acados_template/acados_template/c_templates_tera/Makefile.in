@@ -312,7 +312,8 @@ CPPFLAGS+= -I $(INCLUDE_PATH)/daqp/include
 
 {# c-compiler flags #}
 # define the c-compiler flags for make's implicit rules
-CFLAGS = -fPIC -std=c99 {{ openmp_flag }} {{ solver_options.ext_fun_compile_flags }} $(shell python3-config --cflags) #-fno-diagnostics-show-line-numbers -g 
+CFLAGS = -fPIC -std=c99 {{ openmp_flag }} {{ solver_options.ext_fun_compile_flags }} #-fno-diagnostics-show-line-numbers -g 
+CFLAGS += $(shell python3-config --cflags)   
 # # Debugging
 # CFLAGS += -g3
 
@@ -384,8 +385,9 @@ ocp_cython_o: ocp_cython_c
 	-I $(INCLUDE_PATH) \
 	{%- for path in cython_include_dirs %}
 	-I {{ path }} \
+	$(CFLAGS) \
 	{%- endfor %}
-	acados_ocp_solver_pyx.c \
+	acados_ocp_solver_pyx.c
 
 ocp_cython: ocp_cython_o
 	$(CC) $(ACADOS_FLAGS) -shared \
@@ -401,7 +403,7 @@ sim_cython_c: sim_shared_lib
 	-o acados_sim_solver_pyx.c \
 	-I $(INCLUDE_PATH)/../interfaces/acados_template/acados_template \
 	$(INCLUDE_PATH)/../interfaces/acados_template/acados_template/acados_sim_solver_pyx.pyx \
-	-I {{ code_export_directory }} \
+	-I {{ code_export_directory }}
 
 sim_cython_o: sim_cython_c
 	$(CC) $(ACADOS_FLAGS) -c -O2 \
@@ -410,17 +412,15 @@ sim_cython_o: sim_cython_c
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
-	$(EXTRAS) \
 	{%- for path in cython_include_dirs %}
 	-I {{ path }} \
 	{%- endfor %}
-	acados_sim_solver_pyx.c \
+	acados_sim_solver_pyx.c
 
 sim_cython: sim_cython_o
 	$(CC) $(ACADOS_FLAGS) -shared \
 	-o acados_sim_solver_pyx{{ shared_lib_ext }} \
 	-Wl,-rpath,$(LIB_PATH) \
-	$(EXTRAS) \
 	acados_sim_solver_pyx.o \
 	$(abspath .)/libacados_sim_solver_{{ model.name }}{{ shared_lib_ext }} \
 	$(LDFLAGS) $(LDLIBS)
