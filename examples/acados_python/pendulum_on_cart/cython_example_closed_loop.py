@@ -111,13 +111,13 @@ def main():
     # create cython solver
     solver_json = 'acados_ocp_' + model.name + '.json'
     AcadosOcpSolver.generate(ocp, json_file=solver_json)
-    AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+    AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True, verbose=False)
     acados_ocp_solver = AcadosOcpSolver.create_cython_solver(solver_json)
 
     # create cython integrator
     sim_json = 'acados_sim.json'
     AcadosSimSolver.generate(sim, json_file=sim_json)
-    AcadosSimSolver.build(sim.code_export_directory, with_cython=True)
+    AcadosSimSolver.build(sim.code_export_directory, with_cython=True, verbose=False)
     acados_integrator = AcadosSimSolver.create_cython_solver(sim_json)
 
     # create an integrator with the same settings as used in the OCP solver.

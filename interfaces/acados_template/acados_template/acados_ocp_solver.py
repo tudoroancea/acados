@@ -910,6 +910,7 @@ class AcadosOcpSolver:
             else:
                 verbose_system_call(['make', 'clean_ocp_shared_lib'], verbose)
                 verbose_system_call(['make', 'ocp_shared_lib'], verbose)
+        print("SUCCESSFULLY BUILT OCP SOLVER")
         os.chdir(cwd)
 
 
@@ -929,6 +930,9 @@ class AcadosOcpSolver:
 
         importlib.invalidate_caches()
         sys.path.append(os.path.dirname(code_export_directory))
+        sys.path.append(os.path.abspath(code_export_directory))
+        from icecream import ic
+        ic(sys.path, os.path.split(code_export_directory)[1], os.path.abspath(os.path.curdir))
         acados_ocp_solver_pyx = importlib.import_module(f'{os.path.split(code_export_directory)[1]}.acados_ocp_solver_pyx')
 
         AcadosOcpSolverCython = getattr(acados_ocp_solver_pyx, 'AcadosOcpSolverCython')
