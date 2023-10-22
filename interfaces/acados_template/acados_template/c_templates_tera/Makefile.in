@@ -318,7 +318,7 @@ CFLAGS += $(shell python3-config --cflags)
 # CFLAGS += -g3
 
 # linker flags
-LDFLAGS+= -L$(LIB_PATH) $(shell python3-config --ldflags)
+LDFLAGS+= -L$(LIB_PATH) $(shell python3-config --ldflags) -lpython3.11	
 
 # link to libraries
 LDLIBS+= -lacados
